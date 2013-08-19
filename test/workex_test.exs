@@ -8,6 +8,11 @@ defmodule WorkexTest do
     seed_random
     :ok
   end
+  teardown_all do
+    IO.puts " count: #{:folsom_metrics.get_metric_value(:job_counter)} \n\t#{inspect :folsom_metrics.get_metric_value(:jobs)}"
+    IO.puts "job stats: #{inspect :folsom_metrics.get_metrics_value(:jobs)}"
+    :ok
+  end
 
   defp flush_messages(acc // []) do
     receive do
@@ -59,7 +64,12 @@ defmodule WorkexTest do
     Workex.Server.push(server, :worker_id, 1)
     assert_receive([1])
   end
-  
+  test "workex server metrics" do
+    {:ok, server} = Workex.Server.start([workers: [echo_worker(:worker1),echo_worker(:worker2)]])
+
+    Workex.Server.push(server, :worker1, 1)
+    Workex.Server.push(server, :worker2, 2)
+  end 
   test "stack" do
     {:ok, server} = Workex.Server.start([workers: [echo_worker(:worker_id, behaviour: Workex.Behaviour.Stack)]])
     
@@ -205,8 +215,11 @@ defmodule WorkexTest do
   end
 
   defp exec_throttle(sleep_time) do
-    Workex.Throttler.exec_and_measure(fn() ->
-      Workex.Throttler.throttle(50, fn() -> :timer.sleep(sleep_time) end)
+    Workex.Throttler.exec_and_measure(:throttler,fn() ->
+      Workex.Throttler.throttle(:throttler,50, fn() -> 
+        :timer.sleep(sleep_time) 
+        :folsom_metrics.notify({:job_counter,{:dec,1}})
+      end)
     end) |> 
     elem(0)
   end

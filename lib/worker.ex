@@ -15,7 +15,11 @@ defmodule Workex.Worker do
     end
 
     def exec_job(messages, this([id, queue_pid, job, state])) do
+      queue_name = binary_to_atom("#{id}_queue")
+      msg_count = Enum.count messages
+      :folsom_metrics.notify({queue_name,{:inc,msg_count}})
       new_state = job.(messages, state)
+      :folsom_metrics.notify({queue_name,{:dec,msg_count}})
       queue_pid <- {:workex, {:worker_available, id}}
       this.state(new_state)
     end

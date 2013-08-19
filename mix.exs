@@ -8,10 +8,15 @@ defmodule Workex.Mixfile do
   end
 
   def application do
-    []
+    [
+    applications: [:folsom] 
+    ]
   end
 
   defp deps do
-    [{:exactor, github: "sasa1977/exactor"}]
+    [
+      {:exactor, github: "sasa1977/exactor"},
+      {:folsom, git: "https://github.com/boundary/folsom.git" }
+    ]
   end
 end

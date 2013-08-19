@@ -17,14 +17,18 @@ defrecord Workex.Worker.Queue,
   end
   
   defp job_args(data) do
-    Enum.filter(data, fn({key, _}) -> key in [:supervisor, :job, :state] end) |>
+    unless (data[:throttle]) do
+      data = Keyword.put(data,:throttle,0)
+    end
+    Enum.filter(data, fn({key, _}) -> key in [:id,:supervisor, :job, :state] end) |>
     adjust_job(data[:throttle])
   end
 
   defp adjust_job(data, nil), do: data
   defp adjust_job(data, throttle_time) do
+    #IO.puts("UFNF #{inspect data}")
     Keyword.put(data, :job, fn(messages, state) ->
-      Workex.Throttler.throttle(throttle_time, fn() -> data[:job].(messages, state) end)
+      Workex.Throttler.throttle(data[:id],throttle_time, fn() -> data[:job].(messages, state) end)
     end)
   end
   
