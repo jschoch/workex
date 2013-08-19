@@ -1,3 +1,7 @@
+# Changes from https://github.com/sasa1977/workex
+
+This fork has some folsom metrics intergration
+
 # Workex
 
 Normally, worker processes in Erlang/Elixir don't have much control over the received messages. This is especially true for the gen_server based processes, which process messages one by one, as they are received.
